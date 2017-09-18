@@ -1,0 +1,10 @@
+prefix=%PREFIX%
+exec_prefix=%EXEC_PREFIX%
+libdir=%LIBDIR%
+includedir=%INCLUDEDIR%
+
+Name: crossc
+Description: Portable C wrapper for SPIRV-Cross
+Version: 0.0.1
+Libs: -L${libdir} -lcrossc -lstdc++
+Cflags: -I${includedir}
