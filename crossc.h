@@ -18,6 +18,7 @@ void crossc_set_flip_vert_y(crossc_compiler *comp, bool flip_vert_y);
 
 char *crossc_compile(crossc_compiler *comp);
 void crossc_destroy(crossc_compiler *comp);
+const char *crossc_strerror(struct crossc_compiler *comp);
 
 #ifdef __cplusplus
 }
