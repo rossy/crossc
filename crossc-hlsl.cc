@@ -4,8 +4,7 @@
 
 crossc_compiler *crossc_hlsl_create(uint32_t *words, size_t words_len)
 {
-	crossc_compiler *comp =
-		reinterpret_cast<crossc_compiler*>(std::calloc(sizeof *comp, 1));
+	crossc_compiler *comp = (crossc_compiler*)std::calloc(sizeof *comp, 1);
 
 	std::vector<uint32_t> wordsv { words, words + words_len };
 	comp->c = new spirv_cross::CompilerHLSL(std::move(wordsv));

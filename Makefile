@@ -29,7 +29,7 @@ exec_prefix = $(prefix)
 includedir = $(prefix)/include
 libdir = $(exec_prefix)/lib
 
-CPPFLAGS += $(DEPS)
+CPPFLAGS += $(DEFS)
 CXXFLAGS += -std=c++11 -MMD -MP
 
 all: $(STLIB) $(PC)
@@ -67,5 +67,5 @@ uninstall:
 .PHONY: uninstall
 
 clean:
-	-rm -rf $(STLIB) $(PC) $(OBJ) $(DEP)
+	-rm -f $(STLIB) $(PC) $(OBJ) $(DEP)
 .PHONY: clean
