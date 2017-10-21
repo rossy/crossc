@@ -1,29 +1,29 @@
-#include <cstdlib>
-#include <cstring>
 #include <stdexcept>
 #include "crossc-priv.h"
 
+bool crossc_has_valid_program(crossc_compiler *comp)
+{
+	return !!comp->c;
+}
+
 void crossc_set_flip_vert_y(crossc_compiler *comp, bool flip_vert_y)
 {
+	if (!comp->c)
+		return;
 	auto opts = comp->c->get_options();
 	opts.vertex.flip_vert_y = flip_vert_y;
 	comp->c->set_options(opts);
 }
 
-char *crossc_compile(crossc_compiler *comp)
+const char *crossc_compile(crossc_compiler *comp)
 {
+	if (!comp->c)
+		return nullptr;
 	try {
-		auto str = comp->c->compile();
-		char *c_str = (char*)std::malloc(str.size() + 1);
-		std::memcpy(c_str, str.c_str(), str.size() + 1);
-		return c_str;
-
+		comp->output = comp->c->compile();
+		return comp->output.c_str();
 	} catch (const std::exception &e) {
-		size_t what_len = std::strlen(e.what()) + 1;
-		char *c_str = (char*)std::malloc(what_len);
-		std::memcpy(c_str, e.what(), what_len);
-		comp->error = c_str;
-
+		comp->error = std::string { e.what() };
 		return nullptr;
 	}
 }
@@ -32,13 +32,12 @@ void crossc_destroy(crossc_compiler *comp)
 {
 	if (!comp)
 		return;
-	if (comp->c)
-		delete comp->c;
-	std::free(comp->error);
-	std::free(comp);
+	delete comp;
 }
 
 const char *crossc_strerror(crossc_compiler *comp)
 {
-	return comp->error;
+	if (comp->error.empty())
+		return nullptr;
+	return comp->error.c_str();
 }
