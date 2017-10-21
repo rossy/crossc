@@ -1,6 +1,43 @@
 CXX = g++
 AR = ar
 CXXFLAGS = -g -O2 -Wall
+STLIB = libcrossc.a
+SOMAJOR = 1
+SOMINOR = 0
+SOPATCH = 0
+
+CHOST != $(CXX) -dumpmachine
+
+ifneq (,$(findstring x86_64-w64-,$(CHOST)))
+    prefix = /mingw64
+    SOLIB = crossc-$(SOMAJOR).dll
+    IMPLIB = libcrossc.dll.a
+    LDFLAGS += -Wl,--out-implib,$(IMPLIB)
+    LDFLAGS += -Wl,--dynamicbase,--nxcompat,--no-seh
+    LDFLAGS += -Wl,--image-base,0x140000000,--high-entropy-va
+    dlldir = $(bindir)
+else ifneq (,$(findstring i686-w64-,$(CHOST)))
+    prefix = /mingw32
+    SOLIB = crossc-$(SOMAJOR).dll
+    IMPLIB = libcrossc.dll.a
+    LDFLAGS += -Wl,--out-implib,$(IMPLIB)
+    LDFLAGS += -Wl,--dynamicbase,--nxcompat,--no-seh
+    dlldir = $(bindir)
+else
+    prefix = /usr/local
+    LNNAME = libcrossc.so
+    SONAME = libcrossc.so.$(SOMAJOR)
+    SOLIB = libcrossc.so.$(SOMAJOR).$(SOMINOR).$(SOPATCH)
+    CXXFLAGS += -fPIC
+    LDFLAGS += -Wl,-soname,$(SONAME)
+    dlldir = $(libdir)
+endif
+
+exec_prefix = $(prefix)
+includedir = $(prefix)/include
+bindir = $(exec_prefix)/bin
+libdir = $(exec_prefix)/lib
+
 OBJ := spirv_cfg.o \
        spirv_cpp.o \
        spirv_cross.o \
@@ -10,30 +47,19 @@ OBJ := spirv_cfg.o \
        crossc-hlsl.o \
        crossc.o
 DEP := $(OBJ:.o=.d)
-STLIB := libcrossc.a
-INC := crossc.h
 PC := crossc.pc
-
-CHOST != $(CXX) -dumpmachine
-
-ifneq (,$(findstring x86_64-w64-,$(CHOST)))
-    prefix = /mingw64
-else
-ifneq (,$(findstring i686-w64-,$(CHOST)))
-    prefix = /mingw32
-else
-    prefix = /usr/local
-endif
-endif
-exec_prefix = $(prefix)
-includedir = $(prefix)/include
-libdir = $(exec_prefix)/lib
+INC := crossc.h
+VER := version.map
 
 CPPFLAGS += $(DEFS)
-CXXFLAGS += -std=c++11 -MMD -MP
+CXXFLAGS += -std=c++14 -MMD -MP
+LDFLAGS += -Wl,--version-script=$(VER)
 
-all: $(STLIB) $(PC)
-.PHONY: all
+all: static shared
+data: $(PC)
+static: data $(STLIB)
+shared: data $(SOLIB)
+.PHONY: all data static shared
 
 -include $(DEP)
 
@@ -52,20 +78,49 @@ all: $(STLIB) $(PC)
 $(STLIB): $(OBJ)
 	$(AR) rcs $@ $(OBJ)
 
-install: all
+$(SOLIB): $(OBJ)
+	$(CXX) -shared $(LDFLAGS) $(OBJ) $(LIBS) -o $@
+
+install-data: data
 	install -dm755 $(DESTDIR)$(libdir)/pkgconfig
-	install -m644 $(STLIB) $(DESTDIR)$(libdir)/$(STLIB)
 	install -m644 $(PC) $(DESTDIR)$(libdir)/pkgconfig/$(PC)
 	install -dm755 $(DESTDIR)$(includedir)
 	install -m644 $(INC) $(DESTDIR)$(includedir)/$(INC)
+.PHONY: install-data
+
+install-static: static install-data
+	install -dm755 $(DESTDIR)$(libdir)
+	install -m644 $(STLIB) $(DESTDIR)$(libdir)/$(STLIB)
+.PHONY: install-static
+
+install-shared: shared install-data
+	install -dm755 $(DESTDIR)$(dlldir)
+	install -m644 $(SOLIB) $(DESTDIR)$(dlldir)/$(SOLIB)
+ifneq (,$(IMPLIB))
+	install -dm755 $(DESTDIR)$(libdir)
+	install -m644 $(IMPLIB) $(DESTDIR)$(libdir)/$(IMPLIB)
+endif
+ifneq (,$(LNNAME))
+	ln -s $(SOLIB) $(DESTDIR)$(dlldir)/$(LNNAME)
+endif
+.PHONY: install-shared
+
+install: install-static install-shared
 .PHONY: install
 
 uninstall:
 	-rm -f $(DESTDIR)$(libdir)/$(STLIB)
+	-rm -f $(DESTDIR)$(dlldir)/$(SOLIB)
+ifneq (,$(IMPLIB))
+	-rm -f $(DESTDIR)$(libdir)/$(IMPLIB)
+endif
+ifneq (,$(LNNAME))
+	-rm -f $(DESTDIR)$(dlldir)/$(LNNAME)
+endif
 	-rm -f $(DESTDIR)$(libdir)/pkgconfig/$(PC)
 	-rm -f $(DESTDIR)$(includedir)/$(INC)
 .PHONY: uninstall
 
 clean:
-	-rm -f $(STLIB) $(PC) $(OBJ) $(DEP)
+	-rm -f $(STLIB) $(SOLIB) $(IMPLIB) $(PC) $(OBJ) $(DEP)
 .PHONY: clean

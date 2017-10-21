@@ -1,0 +1,4 @@
+{
+	global: crossc_*;
+	local: *;
+};
