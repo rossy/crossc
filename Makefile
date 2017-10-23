@@ -53,7 +53,8 @@ VER := crossc.sym
 
 CPPFLAGS += $(DEFS)
 CXXFLAGS += -std=c++14 -MMD -MP
-LDFLAGS += -Wl,--version-script=$(VER)
+
+vpath % $(dir $(firstword $(MAKEFILE_LIST)))
 
 all: static shared
 data: $(PC)
@@ -78,8 +79,8 @@ shared: data $(SOLIB)
 $(STLIB): $(OBJ)
 	$(AR) rcs $@ $(OBJ)
 
-$(SOLIB): $(OBJ)
-	$(CXX) -shared $(LDFLAGS) $(OBJ) $(LIBS) -o $@
+$(SOLIB): $(VER) $(OBJ)
+	$(CXX) -shared -Wl,--version-script=$< $(LDFLAGS) $(OBJ) $(LIBS) -o $@
 
 install-data: data
 	install -dm755 $(DESTDIR)$(libdir)/pkgconfig
