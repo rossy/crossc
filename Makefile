@@ -49,7 +49,7 @@ OBJ := spirv_cfg.o \
 DEP := $(OBJ:.o=.d)
 PC := crossc.pc
 INC := crossc.h
-VER := version.map
+VER := crossc.sym
 
 CPPFLAGS += $(DEFS)
 CXXFLAGS += -std=c++14 -MMD -MP
