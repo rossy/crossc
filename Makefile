@@ -82,11 +82,11 @@ $(STLIB): $(OBJ)
 $(SOLIB): $(VER) $(OBJ)
 	$(CXX) -shared -Wl,--version-script=$< $(LDFLAGS) $(OBJ) $(LIBS) -o $@
 
-install-data: data
+install-data: $(INC) data
 	install -dm755 $(DESTDIR)$(libdir)/pkgconfig
 	install -m644 $(PC) $(DESTDIR)$(libdir)/pkgconfig/$(PC)
 	install -dm755 $(DESTDIR)$(includedir)
-	install -m644 $(INC) $(DESTDIR)$(includedir)/$(INC)
+	install -m644 $< $(DESTDIR)$(includedir)/$(INC)
 .PHONY: install-data
 
 install-static: static install-data
