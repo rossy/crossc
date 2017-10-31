@@ -2,10 +2,11 @@ CXX = g++
 AR = ar
 CXXFLAGS = -g -O2 -Wall
 STLIB = libcrossc.a
-SOMAJOR = 1
-SOMINOR = 0
-SOPATCH = 0
 
+HDR = $(dir $(firstword $(MAKEFILE_LIST)))/crossc.h
+SOMAJOR != grep 'define CROSSC_VERSION_MAJOR' $(HDR) | sed -e 's/.* //'
+SOMINOR != grep 'define CROSSC_VERSION_MINOR' $(HDR) | sed -e 's/.* //'
+SOPATCH != grep 'define CROSSC_VERSION_PATCH' $(HDR) | sed -e 's/.* //'
 CHOST != $(CXX) -dumpmachine
 
 ifneq (,$(findstring x86_64-w64-,$(CHOST)))
@@ -71,7 +72,10 @@ shared: data $(SOLIB)
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
 
 %.pc: %.pc.in
-	sed -e 's,%PREFIX%,$(prefix),' \
+	sed -e 's,%SOMAJOR%,$(SOMAJOR),' \
+	    -e 's,%SOMINOR%,$(SOMINOR),' \
+	    -e 's,%SOPATCH%,$(SOPATCH),' \
+	    -e 's,%PREFIX%,$(prefix),' \
 	    -e 's,%EXEC_PREFIX%,$(exec_prefix),' \
 	    -e 's,%INCLUDEDIR%,$(includedir),' \
 	    -e 's,%LIBDIR%,$(libdir),' $< > $@

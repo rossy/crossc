@@ -1,6 +1,11 @@
 #include <stdexcept>
 #include "crossc-priv.h"
 
+uint32_t crossc_version()
+{
+	return CROSSC_VERSION;
+}
+
 bool crossc_has_valid_program(crossc_compiler *comp)
 {
 	return !!comp->c;

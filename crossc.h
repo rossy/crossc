@@ -15,6 +15,26 @@ extern "C" {
 #include <inttypes.h>
 #endif
 
+#define CROSSC_VERSION_MAJOR 1
+#define CROSSC_VERSION_MINOR 0
+#define CROSSC_VERSION_PATCH 0
+
+#define CROSSC_MAKE_VERSION(maj, min, pat) (((uint32_t)(maj) << 24) | \
+                                            ((uint32_t)(min) << 16) | \
+                                             (uint32_t)(pat))
+
+// Use this to get the version of crossc that has been compiled against
+#define CROSSC_VERSION CROSSC_MAKE_VERSION(CROSSC_VERSION_MAJOR, \
+                                           CROSSC_VERSION_MINOR, \
+                                           CROSSC_VERSION_PATCH)
+
+#define CROSSC_VERSION_GET_MAJOR(ver) ((ver) >> 24)
+#define CROSSC_VERSION_GET_MINOR(ver) (((ver) >> 16) & 0xff)
+#define CROSSC_VERSION_GET_PATCH(ver) ((ver) & 0xffff)
+
+// Use this to get the version of crossc that has been linked against
+uint32_t crossc_version(void);
+
 // Create a new instance of the compiler targeting HLSL. words should point to
 // a valid SPIR-V binary, which is copied and parsed. After creation,
 // crossc_has_valid_program() should be called to check if the SPIR-V binary
