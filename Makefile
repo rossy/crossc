@@ -8,13 +8,13 @@ bindir = $(exec_prefix)/bin
 libdir = $(exec_prefix)/lib
 
 HDR = $(dir $(firstword $(MAKEFILE_LIST)))/crossc.h
-SOMAJOR != grep 'define CROSSC_VERSION_MAJOR' $(HDR) | sed -e 's/.* //'
-SOMINOR != grep 'define CROSSC_VERSION_MINOR' $(HDR) | sed -e 's/.* //'
-SOPATCH != grep 'define CROSSC_VERSION_PATCH' $(HDR) | sed -e 's/.* //'
+SOMAJOR = $(shell grep 'define CROSSC_VERSION_MAJOR' $(HDR) | sed -e 's/.* //')
+SOMINOR = $(shell grep 'define CROSSC_VERSION_MINOR' $(HDR) | sed -e 's/.* //')
+SOPATCH = $(shell grep 'define CROSSC_VERSION_PATCH' $(HDR) | sed -e 's/.* //')
 
 STLIB = libcrossc.a
 
-CHOST != $(CXX) -dumpmachine
+CHOST = $(shell $(CXX) -dumpmachine)
 
 ifneq (,$(findstring x86_64-w64-,$(CHOST)))
     prefix = /mingw64
@@ -31,6 +31,15 @@ else ifneq (,$(findstring i686-w64-,$(CHOST)))
     IMPLIB = libcrossc.dll.a
     LDFLAGS += -Wl,--dynamicbase,--nxcompat,--no-seh
     override LDFLAGS += -Wl,--out-implib,$(IMPLIB)
+else ifneq (,$(findstring -apple-darwin,$(CHOST)))
+    prefix = /usr/local
+    sodir = $(libdir)
+    LNNAME = libcrossc.dylib
+    SOLIB = libcrossc.$(SOMAJOR).dylib
+    override CXXFLAGS += -fPIC
+    override LDFLAGS += -install_name $(SOLIB)
+    override LDFLAGS += -current_version $(SOMAJOR).$(SOMINOR).$(SOPATCH)
+    override LDFLAGS += -compatibility_version $(SOMAJOR).$(SOMINOR)
 else
     prefix = /usr/local
     sodir = $(libdir)
@@ -86,8 +95,13 @@ shared: data $(SOLIB)
 $(STLIB): $(OBJ)
 	$(AR) rcs $@ $(OBJ)
 
+ifneq (,$(findstring -apple-darwin,$(CHOST)))
+$(SOLIB): $(OBJ)
+	$(CXX) -dynamiclib -Wl,-exported_symbol,'_crossc_*' $(LDFLAGS) $(OBJ) $(LIBS) -o $@
+else
 $(SOLIB): $(VER) $(OBJ)
 	$(CXX) -shared -Wl,--version-script=$< $(LDFLAGS) $(OBJ) $(LIBS) -o $@
+endif
 
 install-data: $(INC) data
 	install -dm755 $(DESTDIR)$(libdir)/pkgconfig
