@@ -70,10 +70,9 @@ override CXXFLAGS += -std=c++14 -MMD -MP
 vpath % $(dir $(firstword $(MAKEFILE_LIST)))
 
 all: static shared
-data: $(PC)
-static: data $(STLIB)
-shared: data $(SOLIB)
-.PHONY: all data static shared
+static: $(STLIB)
+shared: $(SOLIB)
+.PHONY: all static shared
 
 -include $(DEP)
 
@@ -90,7 +89,20 @@ shared: data $(SOLIB)
 	    -e 's,%PREFIX%,$(prefix),' \
 	    -e 's,%EXEC_PREFIX%,$(exec_prefix),' \
 	    -e 's,%INCLUDEDIR%,$(includedir),' \
-	    -e 's,%LIBDIR%,$(libdir),' $< > $@
+	    -e 's,%LIBDIR%,$(libdir),' \
+	    -e 's, *%LIBS%,,' \
+	    -e 's,%LIBS.PRIVATE%,-lstdc++,' $< > $@
+
+%-static.pc: %.pc.in
+	sed -e 's,%SOMAJOR%,$(SOMAJOR),' \
+	    -e 's,%SOMINOR%,$(SOMINOR),' \
+	    -e 's,%SOPATCH%,$(SOPATCH),' \
+	    -e 's,%PREFIX%,$(prefix),' \
+	    -e 's,%EXEC_PREFIX%,$(exec_prefix),' \
+	    -e 's,%INCLUDEDIR%,$(includedir),' \
+	    -e 's,%LIBDIR%,$(libdir),' \
+	    -e 's,%LIBS%,-lstdc++,' \
+	    -e 's, *%LIBS.PRIVATE%,,' $< > $@
 
 $(STLIB): $(OBJ)
 	$(AR) rcs $@ $(OBJ)
@@ -103,19 +115,27 @@ $(SOLIB): $(VER) $(OBJ)
 	$(CXX) -shared -Wl,--version-script=$< $(LDFLAGS) $(OBJ) $(LIBS) -o $@
 endif
 
-install-data: $(INC) data
-	install -dm755 $(DESTDIR)$(libdir)/pkgconfig
-	install -m644 $(PC) $(DESTDIR)$(libdir)/pkgconfig/$(PC)
+install-includes: $(INC)
 	install -dm755 $(DESTDIR)$(includedir)
 	install -m644 $< $(DESTDIR)$(includedir)/$(INC)
-.PHONY: install-data
+.PHONY: install-includes
 
-install-static: static install-data
+install-pc: crossc.pc
+	install -dm755 $(DESTDIR)$(libdir)/pkgconfig
+	install -m644 $< $(DESTDIR)$(libdir)/pkgconfig/$(PC)
+.PHONY: install-pc
+
+install-pc-static: crossc-static.pc
+	install -dm755 $(DESTDIR)$(libdir)/pkgconfig
+	install -m644 $< $(DESTDIR)$(libdir)/pkgconfig/$(PC)
+.PHONY: install-pc-static
+
+install-stlib: static
 	install -dm755 $(DESTDIR)$(libdir)
 	install -m644 $(STLIB) $(DESTDIR)$(libdir)/$(STLIB)
-.PHONY: install-static
+.PHONY: install-stlib
 
-install-shared: shared install-data
+install-solib: shared
 	install -dm755 $(DESTDIR)$(sodir)
 	install -m755 $(SOLIB) $(DESTDIR)$(sodir)/$(SOLIB)
 ifneq (,$(IMPLIB))
@@ -125,10 +145,12 @@ endif
 ifneq (,$(LNNAME))
 	ln -fs $(SOLIB) $(DESTDIR)$(sodir)/$(LNNAME)
 endif
-.PHONY: install-shared
+.PHONY: install-solib
 
-install: install-static install-shared
-.PHONY: install
+install: install-stlib install-solib install-includes install-pc
+install-static: install-stlib install-includes install-pc-static
+install-shared: install-solib install-includes install-pc
+.PHONY: install install-static install-shared
 
 uninstall:
 	-rm -f $(DESTDIR)$(libdir)/$(STLIB)
@@ -144,5 +166,5 @@ endif
 .PHONY: uninstall
 
 clean:
-	-rm -f $(STLIB) $(SOLIB) $(IMPLIB) $(PC) $(OBJ) $(DEP)
+	-rm -f $(STLIB) $(SOLIB) $(IMPLIB) crossc.pc crossc-static.pc $(OBJ) $(DEP)
 .PHONY: clean

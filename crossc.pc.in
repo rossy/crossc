@@ -6,6 +6,6 @@ includedir=%INCLUDEDIR%
 Name: crossc
 Description: Portable C wrapper for SPIRV-Cross
 Version: %SOMAJOR%.%SOMINOR%.%SOPATCH%
-Libs: -L${libdir} -lcrossc
-Libs.private: -lstdc++
+Libs: -L${libdir} -lcrossc %LIBS%
+Libs.private: %LIBS.PRIVATE%
 Cflags: -I${includedir}
