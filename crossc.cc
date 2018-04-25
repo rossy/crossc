@@ -15,9 +15,9 @@ void crossc_set_flip_vert_y(crossc_compiler *comp, bool flip_vert_y)
 {
 	if (!comp->c)
 		return;
-	auto opts = comp->c->get_options();
+	auto opts = comp->c->get_common_options();
 	opts.vertex.flip_vert_y = flip_vert_y;
-	comp->c->set_options(opts);
+	comp->c->set_common_options(opts);
 }
 
 const char *crossc_compile(crossc_compiler *comp)

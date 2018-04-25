@@ -24,7 +24,7 @@ void crossc_hlsl_set_shader_model(crossc_compiler *comp, int model)
 	if (!comp->c)
 		return;
 	auto hlsl = get_hlsl(comp);
-	auto opts = hlsl->get_options();
+	auto opts = hlsl->get_hlsl_options();
 	opts.shader_model = model;
-	hlsl->set_options(opts);
+	hlsl->set_hlsl_options(opts);
 }
