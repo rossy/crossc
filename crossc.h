@@ -32,8 +32,24 @@ extern "C" {
 #define CROSSC_VERSION_GET_MINOR(ver) (((ver) >> 16) & 0xff)
 #define CROSSC_VERSION_GET_PATCH(ver) ((ver) & 0xffff)
 
+typedef enum crossc_glsl_profile {
+	CROSSC_GLSL_PROFILE_CORE,
+	CROSSC_GLSL_PROFILE_ES,
+} crossc_glsl_profile;
+
 // Use this to get the version of crossc that has been linked against
 uint32_t crossc_version(void);
+
+// Create a new instance of the compiler targeting GLSL. words should point to
+// a valid SPIR-V binary, which is copied and parsed. After creation,
+// crossc_has_valid_program() should be called to check if the SPIR-V binary
+// was parsed correctly.
+crossc_compiler *crossc_glsl_create(const uint32_t *words, size_t word_count);
+
+// Set the target GLSL version. The format is the same as specified in a
+// #version directive. Profile should be one of the crossc_glsl_profile values.
+void crossc_glsl_set_version(crossc_compiler *comp, int version,
+                             crossc_glsl_profile profile);
 
 // Create a new instance of the compiler targeting HLSL. words should point to
 // a valid SPIR-V binary, which is copied and parsed. After creation,

@@ -57,6 +57,7 @@ OBJ := spirv_cfg.o \
        spirv_glsl.o \
        spirv_hlsl.o \
        spirv_msl.o \
+       crossc-glsl.o \
        crossc-hlsl.o \
        crossc.o
 DEP := $(OBJ:.o=.d)
