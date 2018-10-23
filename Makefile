@@ -54,9 +54,11 @@ endif
 OBJ := spirv_cfg.o \
        spirv_cpp.o \
        spirv_cross.o \
+       spirv_cross_parsed_ir.o \
        spirv_glsl.o \
        spirv_hlsl.o \
        spirv_msl.o \
+       spirv_parser.o \
        crossc-glsl.o \
        crossc-hlsl.o \
        crossc.o
