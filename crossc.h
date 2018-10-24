@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 #define CROSSC_VERSION_MAJOR 1
-#define CROSSC_VERSION_MINOR 5
+#define CROSSC_VERSION_MINOR 6
 #define CROSSC_VERSION_PATCH 0
 
 #define CROSSC_MAKE_VERSION(maj, min, pat) (((uint32_t)(maj) << 24) | \
